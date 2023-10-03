@@ -1,44 +1,49 @@
 import { useEffect, useState } from "react";
+
 import requireArgument from "../util/requireArgument";
+import { createSwapiURL, fetchSwapiData } from "../lib/swapiServices";
+import * as Pagination from "../util/pagination";
 
-const resources = [
-	"films",
-	"people",
-	"planets",
-	"species",
-	"vehicles",
-	"starships",
-];
+const useSwapi = (resource = requireArgument("resource"), options = {}) => {
+	const { page: initialPage = 1, limit = 10 } = options;
 
-const useSwapi = (resource = requireArgument("resource"), id, params) => {
 	const [data, setData] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState(null);
+	const [page, setPage] = useState(initialPage);
 
 	useEffect(() => {
-		if (resources.includes(resource.trim().toLowerCase())) {
-			const abortController = new AbortController();
-			const signal = abortController.signal;
+		const abortController = new AbortController();
+		const signal = abortController.signal;
 
-			let baseUrl = `https://swapi.tech/api/${resource}`;
-			if (id) baseUrl += `/${id}`;
-			if (params) baseUrl += `/${params}`;
+		const fetchData = async () => {
+			try {
+				setIsLoading(true);
+				setError(null);
+				const url = createSwapiURL(resource, { ...options, page, limit });
+				const { data: fetchedData } = await fetchSwapiData(url, signal);
 
-			setIsLoading(true);
-			setError(null);
-			setData(null);
+				setData(fetchedData);
+			} catch (err) {
+				setError(err);
+			} finally {
+				setIsLoading(false);
+			}
+		};
 
-			fetch(baseUrl)
-				.then((res) => res.json())
-				.then((data) => setData(data))
-				.catch((err) => !signal.aborted && setError(err))
-				.finally(() => setIsLoading(false));
+		fetchData();
 
-			return () => abortController.abort();
-		}
-	}, [resource, id, params]);
+		return () => abortController.abort();
+	}, [resource, page, limit]);
 
-	return { data, isLoading, error };
+	return {
+		data,
+		isLoading,
+		error,
+		next: () => setPage((p) => Pagination.next(p)),
+		prev: () => setPage((p) => Pagination.prev(p)),
+		jump: (toPage) => setPage(Pagination.jump(toPage)),
+	};
 };
 
 export default useSwapi;
