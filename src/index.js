@@ -7,8 +7,6 @@ Rate Limiting Retries
 Testing
 Type Checking
 Optimizations
-Code minification and bundling
-Documentation
 Cross-browser compat.
 Refactor
 */
