@@ -5,7 +5,7 @@ Clear data on new fetch?
 Ignore if falsey resource type
 Triggered Fetch
 Return promise from fetch service
-Add info in docs about caching and usage with multiple hook calls
+Add info in docs about usage with multiple hook calls
 Error Handling
 Rate Limiting Retries
 Testing
